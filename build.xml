@@ -1,0 +1,193 @@
+<?xml version="1.0"?>
+
+<!--
+    Build file for the JCatalog Project.
+    
+    Derek Y. Shen
+    6/2004
+-->
+
+<project name="jcatalog" default="build.war" basedir=".">
+	<!-- Configure the context path for this application -->
+	<property name="project.name" value="catalog-1.0" />
+	<property name="build.dir" value="${basedir}/build" />
+	<property name="src.dir" value="${basedir}/src" />
+	<property name="src.java.dir" value="${src.dir}/java" />
+	<property name="docs.dir" value="${basedir}/docs" />
+	<property name="docs.api.dir" value="${docs.dir}/api" />
+	<property name="web.dir" value="${basedir}/web" />
+	<property name="lib.dir" value="${basedir}/lib" />
+	<property name="dist.dir" value="${basedir}/dist" />
+	<property name="testdir" location="${basedir}/test" />
+	<property name="srcdir" location="${basedir}/src" />
+	<property name="full-compile" value="false" />
+	<property name="report.dir" location="C:\Users\ashutoshs.RLLABINDIA\Desktop\report" />
+	<property name="test.htmlreports.dir" location="${build.dir}/test/htmlreports/" />
+	<property name="test.data.dir" location="${build.dir}/test/data/" />
+	<property name="junit.class.name" value="catalog.model.dao.hibernate.Testdb" />
+	<!--<property name="class.name" value="catalog.view.builder.Test1" />-->
+	<!--<property name="classes.dir" location="${basedir}/output" />-->
+
+	<path id="classpath">
+		<fileset dir="${lib.dir}">
+			<include name="**/*.jar" />
+		</fileset>
+	</path>
+
+	<!--<path id="javaclasspath">
+		<fileset dir="${src.dir}">
+			<include name="**/*.java" />
+		</fileset>
+	</path>-->
+
+	<!--<path id="classpath.base">
+		<pathelement location="${lib.dir}/tools.jar" />
+	</path>-->
+
+	<path id="classpath.test">
+		<pathelement location="${basedir}/lib/junit-4.10.jar" />
+		<pathelement location="${testdir}" />
+		<!--<path refid="classpath.base" />-->
+		<path refid="classpath" />
+	    
+	</path>
+
+	<path id="classpath.src">
+		<pathelement location="test" />
+	</path>
+
+	<target name="clean">
+		<delete dir="${build.dir}" />
+		<delete verbose="${full-compile}">
+			<fileset dir="${testdir}" includes="**/*.class" />
+		</delete>
+
+		<delete includeEmptyDirs="true" failonerror="false">
+			<fileset dir="${src.dir}">
+				<include name="**/*.class" />
+			</fileset>
+			<fileset dir="${testdir}">
+				<include name="**/*.class" />
+			</fileset>
+			<fileset dir="${classes.dir}">
+				<include name="**/*.class" />
+			</fileset>
+			<fileset dir="${test.htmlreports.dir}">
+				<include name="**/*.txt" />
+				<include name="**/*.xml" />
+				<include name="**/*.html" />
+			</fileset>
+		</delete>
+	</target>
+
+	<target name="prepare" depends="clean" description="Create build directories.">
+		<mkdir dir="${build.dir}/${project.name}" />
+		<mkdir dir="${build.dir}/${project.name}/WEB-INF" />
+		<mkdir dir="${build.dir}/${project.name}/WEB-INF/classes" />
+		<mkdir dir="${build.dir}/${project.name}/WEB-INF/lib" />
+		<mkdir dir="${test.data.dir}" />
+		<mkdir dir="${test.htmlreports.dir}" />			
+	</target>
+
+	<target name="deploy.copyJars">
+		<copy todir="${build.dir}/${project.name}/WEB-INF/lib">
+			<fileset dir="lib">
+				<include name="**/*.jar" />
+				<include name="**/*.dtd" />
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- Executable Targets -->
+	<target name="build" depends="prepare,deploy.copyJars,test" description="Compile Java files and copy static files.">
+		<javac srcdir="${src.java.dir}" destdir="${build.dir}/${project.name}/WEB-INF/classes">
+			<include name="**/*.java" />
+			<classpath refid="classpath"/>
+		</javac>
+
+		<copy todir="${build.dir}/${project.name}/WEB-INF">
+			<fileset dir="${web.dir}/WEB-INF">
+				<include name="*.xml" />
+				<include name="*.tld" />
+			</fileset>
+		</copy>
+
+		<copy todir="${build.dir}/${project.name}/">
+			<fileset dir="${web.dir}">
+				<include name="*.html" />
+				<include name="*.gif" />
+				<include name="*.jpg" />
+				<include name="*.jsp" />
+				<include name="*.xml" />
+				<include name="*.css" />
+			</fileset>
+		</copy>
+
+		<copy todir="${build.dir}/${project.name}/images">
+			<fileset dir="${web.dir}/images">
+				<include name="**/*.gif" />
+				<include name="**/*.jpg" />
+			</fileset>
+		</copy>
+
+		<copy todir="${build.dir}/${project.name}/WEB-INF/classes">
+			<fileset dir="${src.java.dir}">
+				<include name="**/*.properties" />
+				<include name="**/*.xml" />
+				<exclude name="**/*.java" />
+			</fileset>
+		</copy>
+	</target>
+
+	<target name="compile">
+		<javac srcdir="${src.dir}" destdir="${src.dir}" verbose="${full-compile}">
+			<classpath refid="classpath.test" />
+			<!--<classpath refid="classpath.base" />-->
+		</javac>
+	</target>
+
+	<target name="compile-test">
+
+	<mkdir dir="${classes.dir}" />
+
+	<javac srcdir="${testdir}" classpathref="compile.classpath" destdir="${testdir}" debug="true" includes="${src.dir}" includeAntRuntime="false" />
+
+		<javac srcdir="${testdir}" destdir="${testdir}" debug="true" includes="${srcdir}" includeAntRuntime="false">
+			<!--<classpath refid="classpath.base" />-->
+			<classpath refid="classpath.src" />
+			<classpath refid="classpath.test" />
+			<include name="**/*.java" />
+		</javac>
+
+	</target>
+
+
+	<target name="test" depends="compile-test">
+		<junit fork="no" haltonfailure="no" showoutput="yes" printsummary="true">
+			<test name="${junit.class.name}" todir="${test.data.dir}" />
+			<formatter type="brief" usefile="false" />
+			<formatter type="xml" />
+			<!--<classpath refid="classpath.base" />-->
+			<classpath refid="classpath.src" />
+			<classpath refid="classpath.test" />
+			<formatter type="brief" usefile="false" />
+			<!--<test name="TestMessageUtil" />-->
+			
+		</junit>
+		<junitreport todir="${test.htmlreports.dir}">
+			<fileset dir="${test.data.dir}">
+				<include name="TEST-*.xml" />
+			</fileset>
+			<report format="frames" todir="${test.htmlreports.dir}" />
+		</junitreport>
+	</target>
+
+	<target name="build.war" depends="build">
+		<delete dir="${dist.dir}" />
+		<mkdir dir="${dist.dir}" />
+		<!-- create a war file for distribution -->
+		<jar destfile="${dist.dir}/${project.name}.war" basedir="${build.dir}/${project.name}" />
+		<delete dir="${build.dir}" />
+	</target>
+</project>
+
